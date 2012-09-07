@@ -11,7 +11,7 @@ Here is an example.
  ```java
 List<XmlRegion> regions = new XmlRegionAnalyzer().analyzeXml( yourXmlAsAString );
 for( XmlRegion xr : regions ) {
-	switch( xr.getXmlRegionType) {
+	switch( xr.getXmlRegionType ()) {
 		case XmlRegionType.MARKUP: break;
 		case XmlRegionType.ATTRIBUTE: break;
 		case XmlRegionType.ATTRIBUTE_VALUE: break;
