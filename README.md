@@ -24,11 +24,11 @@ for( XmlRegion xr : regions ) {
 	}
 	
 	int regionLength = xr.getEnd() - xr.getStart();
-	System.ou.println( "Region Length:" + regionLength );
+	System.out.println( "Region Length:" + regionLength );
 }
 ```
 
-To use this project, just copy the two classes *XmlRegion* and *XmlRegionAnalyzer* in your project.
+To use this project, just copy the two classes **XmlRegion** and **XmlRegionAnalyzer** in your project.
 Unit tests are provided. The source code is licensed under the terms of the BSD license.
 
 Source files have a version, so that fixes can be easily found and identified.
