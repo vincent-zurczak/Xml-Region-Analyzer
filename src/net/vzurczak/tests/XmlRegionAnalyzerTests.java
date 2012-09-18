@@ -32,6 +32,9 @@ package net.vzurczak.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -637,10 +640,30 @@ public class XmlRegionAnalyzerTests {
 
 
 	/**
+	 * This method tests a XML document that was not successfully processed by this class.
+	 * <p>
+	 * This is more like a performance test.
+	 * The implementation was reviewed in consequence because of this test.
+	 * </p>
+	 * @throws Exception
+	 */
+	@Test
+	public void testExampleThatFailed_1() throws Exception {
+
+		String test = loadResource( "/net/vzurczak/tests/StackOverflowExample.xml" );
+		Assert.assertNotNull( test );
+
+		XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
+		List<XmlRegion> regions = analyzer.analyzeXml( test );
+		testRegionsContiguity( regions, test );
+	}
+
+
+	/**
 	 * Verifies that all the XML regions in the list are contiguous.
 	 * @param regions the analyzed regions
 	 */
-	private void testRegionsContiguity( List<XmlRegion> regions, String xml ) {
+	private static void testRegionsContiguity( List<XmlRegion> regions, String xml ) {
 
 		int end = 0;
 		for( XmlRegion xr : regions ) {
@@ -649,5 +672,47 @@ public class XmlRegionAnalyzerTests {
 		}
 
 		Assert.assertEquals( end, xml.length());
+	}
+
+
+	/**
+	 * Loads a resource from the class loader and returns its content as a string.
+	 * @param resourceLocation the resource location
+	 * @return a string, never null
+	 * @throws IOException
+	 */
+	private static String loadResource( String resourceLocation ) {
+
+		String result = null;
+		InputStream in = null;
+		try {
+			in = XmlRegionAnalyzer.class.getResourceAsStream( resourceLocation );
+			if( in != null ) {
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				byte[] buf = new byte[ 1024 ];
+				int len;
+				while((len = in.read( buf )) > 0) {
+					os.write( buf, 0, len );
+				}
+
+				result = os.toString( "UTF-8" );
+			}
+
+		} catch( Exception e ) {
+			// TODO
+
+		} finally {
+
+			if( in != null ) {
+				try {
+					in.close();
+
+				} catch( IOException e ) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return result != null ? result : "";
 	}
 }

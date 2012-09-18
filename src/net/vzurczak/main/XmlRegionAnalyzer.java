@@ -54,16 +54,48 @@ public class XmlRegionAnalyzer {
 
 		this.offset = 0;
 		List<XmlRegion> positions = new ArrayList<XmlRegion> ();
+		while( this.offset < xml.length()) {
 
-		// White Spaces
-		analyzeWhitespaces( xml, positions );
+			// White spaces
+			analyzeWhitespaces( xml, positions );
+			if( this.offset >= xml.length())
+				break;
 
-		// Start the analysis
-		if( this.offset < xml.length()) {
-			if( xml.charAt( this.offset ) != '<' )
+			// "<" can be several things
+			char c = xml.charAt( this.offset );
+			if( c == '<' ) {
+				if( analyzeInstruction( xml, positions ))
+					continue;
+				if( analyzeComment( xml, positions ))
+					continue;
+				if( analyzeMarkup( xml, positions ))
+					continue;
+				if( analyzeCData( xml, positions ))
+					continue;
+
 				positions.add( new XmlRegion( XmlRegionType.UNEXPECTED, this.offset, xml.length()));
-			else
-				analyzeInstruction( xml, positions );
+				break;
+			}
+
+			// ">" and "/" can only indicate a mark-up
+			else if( c == '>' || c == '/' ) {
+				if( analyzeMarkup( xml, positions ))
+					continue;
+
+				positions.add( new XmlRegion( XmlRegionType.UNEXPECTED, this.offset, xml.length()));
+				break;
+			}
+
+			// Other things can be...
+			if( analyzeAttribute( xml, positions ))
+				continue;
+			if( analyzeAttributeValue( xml, positions ))
+				continue;
+			if( analyzeMarkupValue( xml, positions ))
+				continue;
+
+			positions.add( new XmlRegion( XmlRegionType.UNEXPECTED, this.offset, xml.length()));
+			break;
 		}
 
 		return positions;
@@ -72,20 +104,13 @@ public class XmlRegionAnalyzer {
 
 	/**
 	 * Tries to analyze a XML instruction.
-	 * <p>
-	 * A XML instruction can be followed by a comment or a mark-up.<br />
-	 * If an instruction is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeInstruction( String xml, List<XmlRegion> positions ) {
+	boolean analyzeInstruction( String xml, List<XmlRegion> positions ) {
 
-		// White Spaces
-		analyzeWhitespaces( xml, positions );
-
-		// Find and process an instruction
+		boolean result = false;
 		int newPos = this.offset;
 		if( newPos < xml.length()
 				&& xml.charAt( newPos ) == '<'
@@ -96,37 +121,27 @@ public class XmlRegionAnalyzer {
 					&& xml.charAt( newPos ) != '>' )
 				newPos = xml.indexOf( '?', newPos );
 
-			if( xml.charAt( newPos ) == '>' )
+			if( xml.charAt( newPos ) == '>' ) {
 				positions.add( new XmlRegion( XmlRegionType.INSTRUCTION, this.offset, newPos + 1 ));
-
-			this.offset = newPos + 1;
+				this.offset = newPos + 1;
+				result = true;
+			}
 		}
 
-		// Process the possible followers
-		analyzeComment( xml, positions );
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a XML comment.
-	 * <p>
-	 * A XML comment can be followed by a comment or a mark-up.<br />
-	 * If a comment is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeComment( String xml, List<XmlRegion> positions ) {
+	boolean analyzeComment( String xml, List<XmlRegion> positions ) {
 
-		// White spaces
-		analyzeWhitespaces( xml, positions );
-
-		// Find and process a comment
+		boolean result = false;
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
-
 		if( xml.charAt( newPos ) == '<'
 				&& ++ newPos < xml.length()
 				&& xml.charAt( newPos ) == '!'
@@ -147,48 +162,32 @@ public class XmlRegionAnalyzer {
 
 			positions.add( new XmlRegion( XmlRegionType.COMMENT, this.offset, newPos ));
 			this.offset = newPos;
-			analyzeComment( xml, positions );
+			result = true;
 		}
 
-		// Process the possible followers
-		analyzeMarkup( xml, positions );
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a XML mark-up.
-	 * <p>
-	 * A XML mark-up can be followed by a comment, a mark-up, a CDATA section or a mark-up value.<br />
-	 * If a mark-up is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 * <p>
-	 * A XML mark-up can contain zero or several attributes.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeMarkup( String xml, List<XmlRegion> positions ) {
+	boolean analyzeMarkup( String xml, List<XmlRegion> positions ) {
 
-		// White spaces
-		analyzeWhitespaces( xml, positions );
-
-		// Find and process a mark-up
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
+		boolean result = false;
+
 
 		// "<..."
-		boolean processFollowers = false;
 		if( xml.charAt( newPos ) == '<' ) {
 
 			// Do not process a CData section or a comment as a mark-up
 			if( newPos + 1 < xml.length()
 					&& xml.charAt( newPos + 1 ) == '!' )
-				return;
-
-			// We are in a mark-up, followers will have to be analyzed
-			processFollowers = true;
+				return false;
 
 			// Mark-up name
 			char c = '!';
@@ -202,10 +201,7 @@ public class XmlRegionAnalyzer {
 
 			positions.add( new XmlRegion( XmlRegionType.MARKUP, this.offset, newPos ));
 			this.offset = newPos;
-
-			// Attributes?
-			if( c != '>' )
-				analyzeAttribute( xml, positions );
+			result = true;
 		}
 
 		// "/>"
@@ -213,52 +209,51 @@ public class XmlRegionAnalyzer {
 				&& ++ newPos < xml.length()
 				&& xml.charAt( newPos ) == '>' ) {
 
-			processFollowers = true;
 			positions.add( new XmlRegion( XmlRegionType.MARKUP, this.offset, ++ newPos ));
 			this.offset = newPos;
+			result = true;
 		}
 
 		// "attributes... >"
 		else if( xml.charAt( newPos ) == '>' ) {
-
-			processFollowers = true;
 			positions.add( new XmlRegion( XmlRegionType.MARKUP, this.offset, ++ newPos ));
 			this.offset = newPos;
+			result = true;
 		}
 
-		// Process the possible followers
-		if( processFollowers
-				&& this.offset < xml.length()) {
-
-			analyzeComment( xml, positions );
-			analyzeMarkupValue( xml, positions );
-			analyzeWhitespaces( xml, positions );
-			analyzeCData( xml, positions );
-			analyzeMarkup( xml, positions );
-		}
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a XML attribute.
-	 * <p>
-	 * A XML attribute must be followed by an attribute value.<br />
-	 * If an attribute is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeAttribute( String xml, List<XmlRegion> positions ) {
+	boolean analyzeAttribute( String xml, List<XmlRegion> positions ) {
 
-		// White spaces
-		analyzeWhitespaces( xml, positions );
+		// An attribute value follows a mark-up
+		for( int i=positions.size() - 1; i >=0; i-- ) {
+			XmlRegion xr = positions.get( i );
+			if( xr.getXmlRegionType() == XmlRegionType.WHITESPACE )
+				continue;
 
-		// Find and process an attribute
+			if( xr.getXmlRegionType() == XmlRegionType.ATTRIBUTE_VALUE )
+				break;
+
+			if( xr.getXmlRegionType() == XmlRegionType.MARKUP ) {
+				char c = xml.charAt( xr.getEnd() - 1 );
+				if( c != '>' )
+					break;
+			}
+
+			return false;
+		}
+
+		// Analyze what we have...
+		boolean result = false;
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
-
 		char c;
 		while( newPos < xml.length()
 				&& (c = xml.charAt( newPos )) != '='
@@ -271,31 +266,40 @@ public class XmlRegionAnalyzer {
 		if( newPos != this.offset ) {
 			positions.add( new XmlRegion( XmlRegionType.ATTRIBUTE, this.offset, newPos ));
 			this.offset = newPos;
-
-			// Process the possible followers
-			analyzeAttributeValue( xml, positions );
+			result = true;
 		}
+
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a mark-up's value.
-	 * <p>
-	 * A XML mark-up's value can be followed by a comment or a (closing) mark-up.<br />
-	 * If a mark-up value is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeMarkupValue( String xml, List<XmlRegion> positions ) {
+	boolean analyzeMarkupValue( String xml, List<XmlRegion> positions ) {
 
-		// Do not process white spaces here!
-		// Find and process a mark-up's value
+		// A mark-up value follows a mark-up
+		for( int i=positions.size() - 1; i >=0; i-- ) {
+			XmlRegion xr = positions.get( i );
+			if( xr.getXmlRegionType() == XmlRegionType.WHITESPACE )
+				continue;
+
+			if( xr.getXmlRegionType() == XmlRegionType.MARKUP
+					|| xr.getXmlRegionType() == XmlRegionType.COMMENT ) {
+				char c = xml.charAt( xr.getEnd() - 1 );
+				if( c == '>' )
+					break;
+			}
+
+			return false;
+		}
+
+		// Read...
+		boolean result = false;
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
-
 		while( newPos < xml.length()
 					&& xml.charAt( newPos ) != '<' )
 			newPos ++;
@@ -313,34 +317,36 @@ public class XmlRegionAnalyzer {
 
 			positions.add( new XmlRegion( XmlRegionType.MARKUP_VALUE, start, newPos ));
 			this.offset = newPos;
-
-			// Process the possible followers
-			analyzeComment( xml, positions );
-			analyzeMarkup( xml, positions );
+			result = true;
 		}
+
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a XML attribute's value.
-	 * <p>
-	 * A XML attribute's value can be followed by an attribute or a (closing) mark-up.<br />
-	 * If an attribute's value is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeAttributeValue( String xml, List<XmlRegion> positions ) {
+	boolean analyzeAttributeValue( String xml, List<XmlRegion> positions ) {
 
-		// White spaces
-		analyzeWhitespaces( xml, positions );
+		// An attribute value follows an attribute
+		for( int i=positions.size() - 1; i >=0; i-- ) {
+			XmlRegion xr = positions.get( i );
+			if( xr.getXmlRegionType() == XmlRegionType.WHITESPACE )
+				continue;
 
-		// Find and process an attribute's value
+			if( xr.getXmlRegionType() == XmlRegionType.ATTRIBUTE )
+				break;
+
+			return false;
+		}
+
+		// Analyze what we have
+		boolean result = false;
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
-
 		if( xml.charAt( newPos ) == '=' ) {
 			analyzeWhitespaces( xml, positions );
 
@@ -360,34 +366,23 @@ public class XmlRegionAnalyzer {
 
 			positions.add( new XmlRegion( XmlRegionType.ATTRIBUTE_VALUE, this.offset, newPos ));
 			this.offset = newPos;
+			result = true;
 		}
 
-		// Process the possible followers
-		analyzeAttribute( xml, positions );
-		analyzeMarkup( xml, positions );
+		return result;
 	}
 
 
 	/**
 	 * Tries to analyze a CDATA section.
-	 * <p>
-	 * A CDATA section can be followed by an comment or a (closing) mark-up.<br />
-	 * If a CDATA section is found, a XML position is stored and the offset is updated.
-	 * </p>
-	 *
 	 * @param xml the XML text
 	 * @param positions the positions already found
+	 * @return true if it recognized a XML instruction
 	 */
-	void analyzeCData( String xml, List<XmlRegion> positions ) {
+	boolean analyzeCData( String xml, List<XmlRegion> positions ) {
 
-		// White spaces
-		analyzeWhitespaces( xml, positions );
-
-		// Find and process an attribute's value
+		boolean result = false;
 		int newPos = this.offset;
-		if( newPos >= xml.length())
-			return;
-
 		if( xml.charAt( newPos ) == '<'
 				&& ++ newPos < xml.length()
 				&& xml.charAt( newPos ) == '!'
@@ -423,11 +418,10 @@ public class XmlRegionAnalyzer {
 
 			positions.add( new XmlRegion( XmlRegionType.CDATA, this.offset, newPos ));
 			this.offset = newPos;
+			result = true;
 		}
 
-		// Process the possible followers
-		analyzeComment( xml, positions );
-		analyzeMarkup( xml, positions );
+		return result;
 	}
 
 
