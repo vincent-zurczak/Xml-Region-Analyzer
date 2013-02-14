@@ -554,6 +554,24 @@ public class XmlRegionAnalyzerTests {
 		Assert.assertEquals( regions.get( 2 ).getXmlRegionType(), XmlRegionType.MARKUP );
 		Assert.assertEquals( regions.get( 2 ).getStart(), 15 );
 		Assert.assertEquals( regions.get( 2 ).getEnd(), sb.length());
+		
+	  // Let's try with something like a XPath
+		sb = new StringBuilder( "<test> /Xpath  </test>" );
+		regions = analyzer.analyzeXml( sb.toString());
+		testRegionsContiguity( regions, sb.toString());
+
+		Assert.assertEquals( regions.size(), 3 );
+		Assert.assertEquals( regions.get( 0 ).getXmlRegionType(), XmlRegionType.MARKUP );
+		Assert.assertEquals( regions.get( 0 ).getStart(), 0 );
+		Assert.assertEquals( regions.get( 0 ).getEnd(), 6 );
+
+		Assert.assertEquals( regions.get( 1 ).getXmlRegionType(), XmlRegionType.MARKUP_VALUE );
+		Assert.assertEquals( regions.get( 1 ).getStart(), 6 );
+		Assert.assertEquals( regions.get( 1 ).getEnd(), 15 );
+
+		Assert.assertEquals( regions.get( 2 ).getXmlRegionType(), XmlRegionType.MARKUP );
+		Assert.assertEquals( regions.get( 2 ).getStart(), 15 );
+		Assert.assertEquals( regions.get( 2 ).getEnd(), sb.length());
 
 
 		// A mix with comments
