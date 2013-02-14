@@ -77,8 +77,8 @@ public class XmlRegionAnalyzer {
 				break;
 			}
 
-			// ">" and "/" can only indicate a mark-up
-			else if( c == '>' || c == '/' ) {
+			// "/" and "/>" can only indicate a mark-up
+			else if( c == '/' && xml.charAt( this.offset+1 ) == '>' || c == '>' ) {
 				if( analyzeMarkup( xml, positions ))
 					continue;
 
