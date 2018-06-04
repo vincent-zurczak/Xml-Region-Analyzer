@@ -117,11 +117,11 @@ public class XmlRegionAnalyzer {
 				&& ++ newPos < xml.length()
 				&& xml.charAt( newPos ) == '?' ) {
 
-			while( ++ newPos < xml.length()
+			while( newPos > -1 && ++ newPos < xml.length() 
 					&& xml.charAt( newPos ) != '>' )
 				newPos = xml.indexOf( '?', newPos );
 
-			if( xml.charAt( newPos ) == '>' ) {
+			if( newPos > -1 && xml.charAt( newPos ) == '>' ) {
 				positions.add( new XmlRegion( XmlRegionType.INSTRUCTION, this.offset, newPos + 1 ));
 				this.offset = newPos + 1;
 				result = true;
