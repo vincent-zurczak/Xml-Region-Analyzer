@@ -36,6 +36,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 import net.vzurczak.main.XmlRegion;
@@ -61,7 +63,6 @@ public class XmlRegionAnalyzerTests {
 
 		// Let's try the basics first
 		XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
-
 		String input = "";
 		List<XmlRegion> regions = analyzer.analyzeXml( input );
 		testRegionsContiguity( regions, input );
@@ -103,6 +104,20 @@ public class XmlRegionAnalyzerTests {
 		Assert.assertEquals( regions.get( 2 ).getXmlRegionType(), XmlRegionType.WHITESPACE );
 		Assert.assertEquals( regions.get( 2 ).getStart(), 1 + ISTR_STD.length());
 		Assert.assertEquals( regions.get( 2 ).getEnd(), 2 + ISTR_STD.length());
+	}
+	
+	/** Verifies that the Bug is fixed, which was leading to an infinite Loop if the XML Header was
+	 * missing an ? at the and in ?>
+	 * @throws Exception
+	 */
+	@Test
+	public void testInstructionsWithInfLoop() throws Exception{
+		XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
+		String input = "<?xml version=\"1.0\" encoding=\"UTF-8\">";
+		CompletableFuture<List<XmlRegion>> f = new CompletableFuture<>();
+		f=CompletableFuture.supplyAsync(()->{return analyzer.analyzeXml( input );});
+		Assert.assertTrue(f.get(3, TimeUnit.SECONDS).size()>0);
+		
 	}
 
 
