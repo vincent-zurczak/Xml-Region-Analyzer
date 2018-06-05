@@ -1,5 +1,7 @@
-Xml Region Analyzer
-===================
+# XML Region Analyzer
+
+[![Build Status](https://travis-ci.org/vincent-zurczak/Xml-Region-Analyzer.svg?branch=master)](https://travis-ci.org/vincent-zurczak/Xml-Region-Analyzer)
+[![License](https://img.shields.io/badge/license-Apache%20v2-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 A light and simple lexical analyzer for XML.
 
@@ -35,7 +37,7 @@ You can add this project in your Maven dependencies.
 
 ```xml
 <dependency>
-	<groupId>net.vzurczak</groupId>
+	<groupId>com.github.vzurczak</groupId>
 	<artifactId>xml-region-analyzer</artifactId>
 	<version>1.0.0</version>
 </dependency>
