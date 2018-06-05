@@ -16,15 +16,12 @@
  * limitations under the License.
 -->
 
-<project 
-		xmlns="http://maven.apache.org/POM/4.0.0"
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.vincent-zurczak</groupId>
 	<artifactId>xml-region-analyzer</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>XML Region Analyzer</name>
 	<description>A lexical analyzer for XML files</description>
 	<url>https://github.com/vincent-zurczak/xml-region-analyzer</url>
@@ -214,7 +211,7 @@
 		<connection>scm:git:git@github.com:vincent-zurczak/xml-region-analyzer.git</connection>
 		<developerConnection>scm:git:git@github.com:vincent-zurczak/xml-region-analyzer.git</developerConnection>
 		<url>http://github.com/vincent-zurczak/xml-region-analyzer</url>
-	  	<tag>HEAD</tag>
+	  	<tag>xml-region-analyzer-1.0.0</tag>
   	</scm>
 	
 	<distributionManagement>
