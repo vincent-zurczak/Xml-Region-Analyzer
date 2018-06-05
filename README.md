@@ -1,6 +1,7 @@
 # XML Region Analyzer
 
 [![Build Status](https://travis-ci.org/vincent-zurczak/Xml-Region-Analyzer.svg?branch=master)](https://travis-ci.org/vincent-zurczak/Xml-Region-Analyzer)
+[![Coverage Status](https://coveralls.io/repos/github/vincent-zurczak/Xml-Region-Analyzer/badge.svg?branch=master)](https://coveralls.io/github/vincent-zurczak/Xml-Region-Analyzer?branch=master)
 [![License](https://img.shields.io/badge/license-Apache%20v2-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 A light and simple lexical analyzer for XML.

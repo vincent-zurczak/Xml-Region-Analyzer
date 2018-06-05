@@ -63,6 +63,17 @@
 					<runOrder>alphabetical</runOrder>
 				</configuration>
 			</plugin>
+			
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>3.0.1</version>
+
+				<configuration>
+					<coverallsFile>target/coveralls.json</coverallsFile>
+					<coverageFile>target/site/cobertura/coverage.xml</coverageFile>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>

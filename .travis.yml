@@ -5,10 +5,14 @@ sudo: false
 install: true
 
 # Test several JDK.
-jdk:
-  - oraclejdk8
-  - oraclejdk9
-  - openjdk8
+matrix:
+  include:
+    - jdk: openjdk8
+      env: BUILD_CMD="mvn clean install cobertura:cobertura coveralls:report -DrepoToken=${COVERALLS_TOKEN}"
+    - jdk: oraclejdk8
+      env: BUILD_CMD="mvn clean install"
+    - jdk: oraclejdk9
+      env: BUILD_CMD="mvn clean install"
 
 # Build with Maven.
-script: mvn clean install
+script: eval $BUILD_CMD
