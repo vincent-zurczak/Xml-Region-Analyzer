@@ -28,8 +28,37 @@ for( XmlRegion xr : regions ) {
 }
 ```
 
-To use this project, just copy the two classes **XmlRegion** and **XmlRegionAnalyzer** in your project.
-Unit tests are provided. The source code is licensed under the terms of the BSD license.
 
-Source files have a version, so that fixes can be easily found and identified.
+## Using it
+
+You can add this project in your Maven dependencies.
+
+```xml
+<dependency>
+	<groupId>net.vzurczak</groupId>
+	<artifactId>xml-region-analyzer</artifactId>
+	<version>1.0.0</version>
+</dependency>
+```
+
+> This project has no dependency towards other libraries.
+
+
+## Development
+
+```properties
+# Compile and package
+mvn clean package
+
+# Run the tests
+mvn clean test
+
+# Get code coverage (then check target/site/cobertura/)
+mvn clean cobertura:cobertura
+```
+
+
+## License
+
+The source code is licensed under the terms of the Apache license v2.
  

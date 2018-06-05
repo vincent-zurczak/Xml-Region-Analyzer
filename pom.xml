@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ *  Copyright (c) 2012-2018, Vincent Zurczak - All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+
+<project 
+		xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.vzurczak</groupId>
+	<artifactId>xml-region-analyzer</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>XML Region analyzer</name>
+	<description>A lexical analyzer for XML files</description>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.compiler.version>1.7</java.compiler.version>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<runOrder>alphabetical</runOrder>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.6</version>
+
+				<configuration>
+					<formats>
+						<format>html</format>
+						<format>xml</format>
+					</formats>
+
+					<instrumentation>
+						<ignoreTrivial>true</ignoreTrivial>
+					</instrumentation>
+
+					<maxmem>256m</maxmem>
+					<quiet>true</quiet>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<releaseProfiles>jdoc-and-sources,signature</releaseProfiles>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<profiles>
+	
+		<!-- Profile to generate javadoc and sources JAR -->
+		<profile>
+			<id>jdoc-and-sources</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+	
+			<build>
+				<plugins>
+
+					<!-- Create JAR with sources -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.3</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- Generate the JAR with the javadoc -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>${javadoc.plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-javadoc</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<stylesheetfile>${javadoc.stylesheet}</stylesheetfile>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!-- Profile to sign the artifacts -->
+		<profile>
+			<id>signature</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+	
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<configuration>
+							<useAgent>true</useAgent>
+						</configuration>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
+	<!-- Required Information to publish artifacts to Maven Central -->
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Vincent ZURCZAK</name>
+			<url>https://github.com/vincent-zurczak</url>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+	
+	<contributors>
+		<contributor>
+			<name>Pierre-Dominique Putallaz</name>
+			<url>https://github.com/Akkenar</url>
+		</contributor>
+		<contributor>
+			<name>SteveR113322</name>
+			<url>https://github.com/SteveR113322</url>
+		</contributor>
+	</contributors>
+
+	<scm>
+		<connection>scm:git:git@github.com:vincent-zurczak/xml-region-analyzer.git</connection>
+		<developerConnection>scm:git:git@github.com:vincent-zurczak/xml-region-analyzer.git</developerConnection>
+		<url>http://github.com/vincent-zurczak/xml-region-analyzer</url>
+	</scm>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-snapshots</id>
+			<name>Sonatype Nexus snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-release-staging</id>
+			<name>Sonatype Nexus release repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
+
+</project>

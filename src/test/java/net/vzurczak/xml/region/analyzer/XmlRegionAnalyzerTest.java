@@ -1,34 +1,22 @@
 /****************************************************************************
  *
- * Copyright (c) 2012, Vincent Zurczak - All rights reserved.
- * This source file is released under the terms of the BSD license.
+ * Copyright (c) 2012-2018, Vincent Zurczak - All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the University of California, Berkeley nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  *****************************************************************************/
 
-package net.vzurczak.tests;
+package net.vzurczak.xml.region.analyzer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,21 +24,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
-import net.vzurczak.main.XmlRegion;
-import net.vzurczak.main.XmlRegion.XmlRegionType;
-import net.vzurczak.main.XmlRegionAnalyzer;
-
+import org.junit.Assert;
 import org.junit.Test;
+
+import net.vzurczak.xml.region.analyzer.XmlRegion.XmlRegionType;
 
 /**
  * Unit tests for {@link XmlRegionAnalyzer}.
  * @author Vincent Zurczak
  */
-public class XmlRegionAnalyzerTests {
+public class XmlRegionAnalyzerTest {
 
 	private static final String ISTR_STD = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
@@ -105,19 +89,20 @@ public class XmlRegionAnalyzerTests {
 		Assert.assertEquals( regions.get( 2 ).getStart(), 1 + ISTR_STD.length());
 		Assert.assertEquals( regions.get( 2 ).getEnd(), 2 + ISTR_STD.length());
 	}
-	
-	/** Verifies that the Bug is fixed, which was leading to an infinite Loop if the XML Header was
-	 * missing an ? at the and in ?>
+
+
+	/**
 	 * @throws Exception
 	 */
 	@Test
-	public void testInstructionsWithInfLoop() throws Exception{
+	public void testInstructionsWithInvalidXmlInstruction() throws Exception{
+
 		XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
 		String input = "<?xml version=\"1.0\" encoding=\"UTF-8\">";
-		CompletableFuture<List<XmlRegion>> f = new CompletableFuture<>();
-		f=CompletableFuture.supplyAsync(()->{return analyzer.analyzeXml( input );});
-		Assert.assertTrue(f.get(3, TimeUnit.SECONDS).size()>0);
-		
+
+		List<XmlRegion> regions = analyzer.analyzeXml( input );
+		testRegionsContiguity( regions, input );
+		Assert.assertNotEquals( regions.size(), 0 );
 	}
 
 
@@ -569,7 +554,7 @@ public class XmlRegionAnalyzerTests {
 		Assert.assertEquals( regions.get( 2 ).getXmlRegionType(), XmlRegionType.MARKUP );
 		Assert.assertEquals( regions.get( 2 ).getStart(), 15 );
 		Assert.assertEquals( regions.get( 2 ).getEnd(), sb.length());
-		
+
 	  // Let's try with something like a XPath
 		sb = new StringBuilder( "<test> /Xpath  </test>" );
 		regions = analyzer.analyzeXml( sb.toString());
@@ -673,6 +658,25 @@ public class XmlRegionAnalyzerTests {
 
 
 	/**
+	 * @throws Exception
+	 */
+	@Test
+	public void testInvalidXmls() throws Exception {
+
+		String[] invalids = { ">op", "op", "<op", ">>", "<!", "<![", "<![C", "<![CD", "<![CDA", "<![CDAT", "<![CDATA", "<![O" };
+		for( String s : invalids ) {
+			StringBuilder sb = new StringBuilder( s );
+
+			XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
+			List<XmlRegion> regions = analyzer.analyzeXml( sb.toString());
+			testRegionsContiguity( regions, sb.toString());
+
+			Assert.assertNotEquals( s, regions.size(), 0 );
+		}
+	}
+
+
+	/**
 	 * This method tests a XML document that was not successfully processed by this class.
 	 * <p>
 	 * This is more like a performance test.
@@ -683,7 +687,7 @@ public class XmlRegionAnalyzerTests {
 	@Test
 	public void testExampleThatFailed_1() throws Exception {
 
-		String test = loadResource( "/net/vzurczak/tests/StackOverflowExample.xml" );
+		String test = loadResource( "/StackOverflowExample.xml" );
 		Assert.assertNotNull( test );
 
 		XmlRegionAnalyzer analyzer = new XmlRegionAnalyzer();
@@ -714,7 +718,7 @@ public class XmlRegionAnalyzerTests {
 	 * @return a string, never null
 	 * @throws IOException
 	 */
-	private static String loadResource( String resourceLocation ) {
+	private static String loadResource( String resourceLocation ) throws IOException {
 
 		String result = null;
 		InputStream in = null;
@@ -731,9 +735,6 @@ public class XmlRegionAnalyzerTests {
 				result = os.toString( "UTF-8" );
 			}
 
-		} catch( Exception e ) {
-			// TODO
-
 		} finally {
 
 			if( in != null ) {
@@ -746,6 +747,6 @@ public class XmlRegionAnalyzerTests {
 			}
 		}
 
-		return result != null ? result : "";
+		return result;
 	}
 }

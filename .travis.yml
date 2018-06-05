@@ -1,0 +1,14 @@
+language: java
+sudo: false
+
+# Skip the default Maven command launched by Travis.
+install: true
+
+# Test several JDK.
+jdk:
+  - oraclejdk8
+  - oraclejdk9
+  - openjdk8
+
+# Build with Maven.
+script: mvn clean install
