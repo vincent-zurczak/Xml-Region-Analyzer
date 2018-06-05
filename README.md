@@ -38,7 +38,7 @@ You can add this project in your Maven dependencies.
 
 ```xml
 <dependency>
-	<groupId>com.github.vzurczak</groupId>
+	<groupId>com.github.vincent-zurczak</groupId>
 	<artifactId>xml-region-analyzer</artifactId>
 	<version>1.0.0</version>
 </dependency>
